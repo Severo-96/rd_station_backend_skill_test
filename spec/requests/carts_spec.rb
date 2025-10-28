@@ -107,6 +107,42 @@ RSpec.describe "/cart", type: :request do
     end
   end
 
+  describe 'GET' do
+    let(:product_one) { Product.create(name: "Product one", price: 1.0) }
+
+    it 'return error when the cart_id does not exist on the session' do
+      expect {
+        get '/cart', as: :json
+        expect(response).to have_http_status(:not_found)
+
+        response_body = JSON.parse(response.body, symbolize_names: true)
+        expect(response_body[:error]).to eq("Cart not found")
+      }
+    end
+
+    context 'when the cart_id does exist on the session' do
+      before do
+        post '/cart', params: { product_id: product_one.id, quantity: 1 }, as: :json
+      end
+
+      it 'return cart info' do
+        expect {
+          get '/cart', as: :json
+          expect(response).to have_http_status(:ok)
+
+          response_body = JSON.parse(response.body, symbolize_names: true)
+          expect(response_body[:total_price].to_d).to eq(1)
+          expect(response_body[:products].length).to eq(1)
+          expect(response_body[:products].first[:id]).to eq(product_one.id)
+          expect(response_body[:products].first[:name]).to eq(product_one.name)
+          expect(response_body[:products].first[:quantity].to_d).to eq(1)
+          expect(response_body[:products].first[:unit_price].to_d).to eq(product_one.price)
+          expect(response_body[:products].first[:total_price].to_d).to eq(1)
+        }
+      end
+    end
+  end
+
   pending "TODO: Escreva os testes de comportamento do controller de carrinho necessários para cobrir a sua implmentação #{__FILE__}"
   describe "POST /add_items" do
     let(:cart) { Cart.create }

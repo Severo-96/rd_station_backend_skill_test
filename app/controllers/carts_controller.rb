@@ -19,6 +19,13 @@ class CartsController < ApplicationController
     render json: { error: "Product already on cart" }, status: :unprocessable_entity
   end
 
+  # GET /cart
+  def show
+    return render_cart if @cart.present?
+
+    render json: { error: "Cart not found" }, status: :not_found
+  end
+
   private
 
   def set_cart
