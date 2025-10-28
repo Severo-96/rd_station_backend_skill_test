@@ -1,6 +1,4 @@
 class Cart < ApplicationRecord
-  enum status: { open: 0, abandoned: 1 }
-
   has_many :cart_items, dependent: :destroy
 
   validates_numericality_of :total_price, greater_than_or_equal_to: 0
@@ -8,8 +6,7 @@ class Cart < ApplicationRecord
   def create_cart_item(item_params)
     self.class.transaction do
       cart_items.create!(item_params)
-      self.total_price = products_total_price
-      save!
+      update_cart_total_price
     end
     
     self
@@ -20,9 +17,7 @@ class Cart < ApplicationRecord
       cart_item = cart_items.find_by!(product_id: item_params[:product_id])
       cart_item.quantity += item_params[:quantity]
       cart_item.save!
-
-      self.total_price = products_total_price
-      save!
+      update_cart_total_price
     end
 
     self
@@ -32,21 +27,35 @@ class Cart < ApplicationRecord
     self.class.transaction do
       cart_item = cart_items.find_by!(product_id:)
       cart_item.destroy!
-
-      self.total_price = products_total_price
-      save!
+      update_cart_total_price
     end
 
     self
   end
 
-  private
-
-  def products_total_price
-    cart_items.includes(:product).sum do |item|
-      item.product.price * item.quantity
-    end
+  def mark_as_active
+    touch(:last_interaction_at)
+    update!(abandoned: false) if abandoned?
   end
 
-  # TODO: lógica para marcar o carrinho como abandonado e remover se abandonado
+  def mark_as_abandoned
+    return unless last_interaction_at <= 3.hours.ago && !abandoned?
+
+    update!(abandoned: true) 
+  end
+
+  def remove_abandoned_cart
+    return unless abandoned? && last_interaction_at <= 7.days.ago
+
+    destroy!
+  end
+
+  private
+
+  def update_cart_total_price
+    products_total_price = cart_items.includes(:product).sum do |item|
+      item.product.price * item.quantity
+    end
+    self.update!(total_price: products_total_price)
+  end
 end
