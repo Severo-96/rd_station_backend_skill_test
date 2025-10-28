@@ -5,7 +5,9 @@ Rails.application.routes.draw do
   resources :products
   get "up" => "rails/health#show", as: :rails_health_check
 
-  resource :cart, only: [:create, :show], controller: 'carts'
+  resource :cart, only: [:create, :show], controller: 'carts' do
+    patch :add_item
+  end
 
   root "rails/health#show"
 end

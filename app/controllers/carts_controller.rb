@@ -26,6 +26,22 @@ class CartsController < ApplicationController
     render json: { error: "Cart not found" }, status: :not_found
   end
 
+  # PATCH /cart/add_item
+  def add_item
+    raise ActiveRecord::RecordNotFound.new if @cart.nil?
+    raise ActionController::BadRequest.new if item_params[:quantity].to_d < 1
+
+    ActiveRecord::Base.transaction do
+      @cart.update_cart_item(item_params)
+    end
+
+    render_cart
+  rescue ActiveRecord::RecordNotFound => e
+    render json: { error: 'Not Found' }, status: :not_found
+  rescue ActionController::BadRequest => e
+    render json: { error: 'Invalid Params' }, status: :unprocessable_entity
+  end
+
   private
 
   def set_cart
