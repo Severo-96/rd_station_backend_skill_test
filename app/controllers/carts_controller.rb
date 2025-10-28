@@ -53,7 +53,7 @@ class CartsController < ApplicationController
 
   def set_cart
     @cart = Cart.find_by(id: session[:cart_id])
-    @cart.mark_as_active! if @cart.present?
+    @cart.mark_as_active if @cart.present?
   end
 
   def item_params
