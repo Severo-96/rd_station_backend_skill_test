@@ -31,15 +31,22 @@ class CartsController < ApplicationController
     raise ActiveRecord::RecordNotFound.new if @cart.nil?
     raise ActionController::BadRequest.new if item_params[:quantity].to_d < 1
 
-    ActiveRecord::Base.transaction do
-      @cart.update_cart_item(item_params)
-    end
-
+    @cart.update_cart_item(item_params)
     render_cart
   rescue ActiveRecord::RecordNotFound => e
     render json: { error: 'Not Found' }, status: :not_found
   rescue ActionController::BadRequest => e
     render json: { error: 'Invalid Params' }, status: :unprocessable_entity
+  end
+
+  # DELETE /cart/:product_id
+  def remove_item
+    raise ActiveRecord::RecordNotFound.new if @cart.nil?
+
+    @cart.remove_cart_item(params[:product_id])
+    render_cart
+  rescue ActiveRecord::RecordNotFound => e
+    render json: { error: 'Not Found' }, status: :not_found
   end
 
   private

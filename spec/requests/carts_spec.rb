@@ -1,10 +1,10 @@
 require 'rails_helper'
 
-RSpec.describe "/cart", type: :request do
-  describe 'POST' do
-    let(:product_one) { Product.create(name: "Product one", price: 1.0) }
-    let(:product_two) { Product.create(name: "Product two", price: 2.0) }
+RSpec.describe '/cart', type: :request do
+  let(:product_one) { Product.create(name: 'Product one', price: 1.0) }
+  let(:product_two) { Product.create(name: 'Product two', price: 2.0) }
 
+  describe 'POST' do
     context 'when the cart_id does not exist on the session' do
       it 'creates a new cart and add the item' do
         expect {
@@ -108,15 +108,13 @@ RSpec.describe "/cart", type: :request do
   end
 
   describe 'GET' do
-    let(:product_one) { Product.create(name: "Product one", price: 1.0) }
-
     it 'return error when the cart_id does not exist on the session' do
       expect {
         get '/cart', as: :json
         expect(response).to have_http_status(:not_found)
 
         response_body = JSON.parse(response.body, symbolize_names: true)
-        expect(response_body[:error]).to eq("Cart not found")
+        expect(response_body[:error]).to eq('Cart not found')
       }
     end
 
@@ -143,17 +141,14 @@ RSpec.describe "/cart", type: :request do
     end
   end
 
-  describe "post /add_items" do
-    let(:product_one) { Product.create(name: "Product one", price: 1.0) }
-    let(:product_two) { Product.create(name: "Product two", price: 2.0) }
-
+  describe "patch /add_items" do
     it 'return error when the cart_id does not exist on the session' do
       expect {
         patch '/cart/add_item', params: { product_id: product_one.id, quantity: 1 }, as: :json
         expect(response).to have_http_status(:not_found)
 
         response_body = JSON.parse(response.body, symbolize_names: true)
-        expect(response_body[:error]).to eq("Not found")
+        expect(response_body[:error]).to eq('Not found')
       }
     end
 
@@ -198,6 +193,73 @@ RSpec.describe "/cart", type: :request do
 
             response_body = JSON.parse(response.body, symbolize_names: true)
             expect(response_body[:error]).to eq('Invalid Params')
+          }.to change { Cart.count }.by(0)
+          .and change { CartItem.count }.by(0)
+        end
+      end
+    end
+  end
+
+  describe "delete /:product_id" do
+    it 'return error when the cart_id does not exist on the session' do
+      expect {
+        delete "/cart/#{product_one.id}", as: :json
+        expect(response).to have_http_status(:not_found)
+
+        response_body = JSON.parse(response.body, symbolize_names: true)
+        expect(response_body[:error]).to eq("Not found")
+      }
+    end
+
+    context 'when the cart_id does exist on the session' do
+      before do
+        post '/cart', params: { product_id: product_one.id, quantity: 1 }, as: :json
+      end
+
+      context 'removes the indicated item from the cart and' do
+        it 'return cart info with the other product' do
+          #add a second item to the cart
+          post '/cart', params: { product_id: product_two.id, quantity: 2 }, as: :json
+
+          expect {
+            delete "/cart/#{product_one.id}", as: :json
+            expect(response).to have_http_status(:ok)
+
+            response_body = JSON.parse(response.body, symbolize_names: true)
+            expect(response_body[:total_price].to_d).to eq(4)
+            expect(response_body[:products].length).to eq(1)
+            expect(response_body[:products].first[:id]).to eq(product_two.id)
+            expect(response_body[:products].first[:name]).to eq(product_two.name)
+            expect(response_body[:products].first[:quantity].to_d).to eq(2)
+            expect(response_body[:products].first[:unit_price].to_d).to eq(product_two.price)
+            expect(response_body[:products].first[:total_price].to_d).to eq(4)
+          }.to change { Cart.count }.by(0)
+          .and change { CartItem.count }.by(-1)
+        end
+
+        it 'return cart info with an empty array' do
+          expect {
+            delete "/cart/#{product_one.id}", as: :json
+            expect(response).to have_http_status(:ok)
+
+            response_body = JSON.parse(response.body, symbolize_names: true)
+            expect(response_body[:total_price].to_d).to eq(0)
+            expect(response_body[:products].length).to eq(0)
+          }.to change { Cart.count }.by(0)
+          .and change { CartItem.count }.by(-1)
+        end
+      end
+
+      
+
+      context 'return error if' do
+        it 'the product does not exist in the cart' do
+          expect {
+            delete "/cart/#{product_two.id}", as: :json
+            expect(response).to have_http_status(:not_found)
+
+            response_body = JSON.parse(response.body, symbolize_names: true)
+            expect(response_body[:error]).to eq('Not Found')
           }.to change { Cart.count }.by(0)
           .and change { CartItem.count }.by(0)
         end

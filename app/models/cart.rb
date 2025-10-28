@@ -28,6 +28,18 @@ class Cart < ApplicationRecord
     self
   end
 
+  def remove_cart_item(product_id)
+    self.class.transaction do
+      cart_item = cart_items.find_by!(product_id:)
+      cart_item.destroy!
+
+      self.total_price = products_total_price
+      save!
+    end
+
+    self
+  end
+
   private
 
   def products_total_price
