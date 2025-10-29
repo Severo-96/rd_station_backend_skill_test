@@ -216,3 +216,33 @@ bundle exec rspec
 
 ### Como enviar seu projeto
 Salve seu código em um versionador de código (GitHub, GitLab, Bitbucket) e nos envie o link publico. Se achar necessário, informe no README as instruções para execução ou qualquer outra informação relevante para correção/entendimento da sua solução.
+
+
+## Executando a app com o docker
+Dado o Docker version 28.5.1, e o Docker Compose version v2.40.2 instalados e configurados:
+
+Executar projeto:
+```bash
+docker compose up -d
+```
+
+Executar os testes:
+```bash
+docker compose exec web bash -lc "RAILS_ENV=test bundle exec rspec"
+```
+
+Instalar as dependências do:
+```bash
+docker compose exec web bash -lc "bundle install"
+```
+
+Resetar servidor depois de alguma alteração de código:
+```bash
+docker compose restart web
+```
+
+Migrações do banco de dados:
+```bash
+docker compose run --rm web bash -lc "bundle exec rails db:create db:migrate"
+```
+
