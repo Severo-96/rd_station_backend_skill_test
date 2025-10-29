@@ -41,11 +41,10 @@ class Cart < ApplicationRecord
   def mark_as_abandoned
     return unless last_interaction_at <= 3.hours.ago && !abandoned?
 
-    touch(:last_interaction_at)
     update!(abandoned: true) 
   end
 
-  def remove_abandoned_cart
+  def remove_if_abandoned
     return unless abandoned? && last_interaction_at <= 7.days.ago
 
     destroy!

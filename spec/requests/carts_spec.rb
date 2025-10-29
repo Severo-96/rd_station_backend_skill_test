@@ -141,10 +141,10 @@ RSpec.describe '/cart', type: :request do
     end
   end
 
-  describe "patch /add_items" do
+  describe "POST /add_item" do
     it 'return error when the cart_id does not exist on the session' do
       expect {
-        patch '/cart/add_item', params: { product_id: product_one.id, quantity: 1 }, as: :json
+        post '/cart/add_item', params: { product_id: product_one.id, quantity: 1 }, as: :json
         expect(response).to have_http_status(:not_found)
 
         response_body = JSON.parse(response.body, symbolize_names: true)
@@ -159,7 +159,7 @@ RSpec.describe '/cart', type: :request do
 
       it 'updates the quantity of the existing item in the cart' do
         expect {
-          patch '/cart/add_item', params: { product_id: product_one.id, quantity: 1 }, as: :json
+          post '/cart/add_item', params: { product_id: product_one.id, quantity: 1 }, as: :json
           expect(response).to have_http_status(:ok)
 
           response_body = JSON.parse(response.body, symbolize_names: true)
@@ -177,7 +177,7 @@ RSpec.describe '/cart', type: :request do
       context 'return error if' do
         it 'the product does not exist in the cart' do
           expect {
-            patch '/cart/add_item', params: { product_id: product_two.id, quantity: 1 }, as: :json
+            post '/cart/add_item', params: { product_id: product_two.id, quantity: 1 }, as: :json
             expect(response).to have_http_status(:not_found)
 
             response_body = JSON.parse(response.body, symbolize_names: true)
@@ -188,7 +188,7 @@ RSpec.describe '/cart', type: :request do
 
         it 'the quantity is invalid' do
           expect {
-            patch '/cart/add_item', params: { product_id: product_one.id, quantity: 'not_a_value' }, as: :json
+            post '/cart/add_item', params: { product_id: product_one.id, quantity: 'not_a_value' }, as: :json
             expect(response).to have_http_status(:unprocessable_entity)
 
             response_body = JSON.parse(response.body, symbolize_names: true)

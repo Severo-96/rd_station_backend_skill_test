@@ -39,29 +39,29 @@ RSpec.describe Cart, type: :model do
     end
   end
 
-  describe 'remove_abandoned_cart' do
+  describe 'remove_if_abandoned' do
     let(:cart) { 
       described_class.create!(
         total_price: 1,
-        abandoned: true,
         last_interaction_at: 7.days.ago - 1.hour
       )
     }
 
     it 'removes the shopping cart if abandoned for at least 7 days' do
-      cart
-      expect { cart.remove_abandoned_cart }.to change { Cart.count }.by(-1)
+      cart.mark_as_abandoned
+      expect { cart.remove_if_abandoned }.to change { Cart.count }.by(-1)
     end
 
     context 'does not remove the shopping cart if' do
       it 'it is not abandoned' do
         cart.update!(abandoned: false)
-        expect { cart.remove_abandoned_cart }.to change { Cart.count }.by(0)
+        expect { cart.remove_if_abandoned }.to change { Cart.count }.by(0)
       end
 
       it 'it is not inactive for at least 7 days' do
+        cart.mark_as_abandoned
         cart.update!(last_interaction_at: 7.days.ago + 1.minute)
-        expect { cart.remove_abandoned_cart }.to change { Cart.count }.by(0)
+        expect { cart.remove_if_abandoned }.to change { Cart.count }.by(0)
       end
     end
   end

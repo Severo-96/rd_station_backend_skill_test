@@ -26,7 +26,7 @@ class CartsController < ApplicationController
     render json: { error: "Cart not found" }, status: :not_found
   end
 
-  # PATCH /cart/add_item
+  # POST /cart/add_item
   def add_item
     raise ActiveRecord::RecordNotFound.new if @cart.nil?
     raise ActionController::BadRequest.new if item_params[:quantity].to_d < 1
