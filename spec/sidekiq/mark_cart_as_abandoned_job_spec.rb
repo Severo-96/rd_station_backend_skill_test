@@ -9,14 +9,14 @@ RSpec.describe MarkCartAsAbandonedJob, type: :job do
 
   it 'executes and mark as abandoned only the eligible carts' do
     Sidekiq::Testing.inline! do
-      #cart sem interação a 3 horas
-      cart_one = Cart.create!(total_price: 1, abandoned: false, last_interaction_at: 3.hours.ago - 1.minute)
+      #cart without interaction for at least 3 hours
+      cart_one = create(:cart, :abandoned, last_interaction_at: 3.hours.ago)
 
-      #cart sem interação a menos de 3 horas
-      cart_two = Cart.create!(total_price: 1, abandoned: false, last_interaction_at: 3.hours.ago + 1.minute)
+      #cart without interaction for less than 3 hours
+      cart_two = create(:cart, last_interaction_at: 3.hours.ago + 1.minute)
 
-      #cart já abandonado
-      cart_three  = Cart.create!(total_price: 1, abandoned: true, last_interaction_at: 1.day.ago)
+      #cart already abandoned
+      cart_three = create(:cart, :abandoned, last_interaction_at: 1.day.ago)
 
       expect { described_class.perform_async }.to change(Cart, :count).by(0)
 
@@ -28,14 +28,14 @@ RSpec.describe MarkCartAsAbandonedJob, type: :job do
 
   it 'executes and removes only the eligible carts' do
     Sidekiq::Testing.inline! do
-      #cart abandonado a 7 dias
-      cart_one = Cart.create!(total_price: 1, abandoned: true, last_interaction_at: 7.days.ago)
+      #cart abandoned and without interaction for at least 7 days
+      cart_one = create(:cart, :abandoned, last_interaction_at: 7.days.ago)
 
-      #cart abandonado a menos de 7 dias
-      cart_two = Cart.create!(total_price: 2, abandoned: true, last_interaction_at: 7.days.ago + 1.hour)
+      #cart abandoned and without interaction for less than 7 days
+      cart_two = create(:cart, :abandoned, last_interaction_at: 7.days.ago + 1.hour)
 
-      #cart nao abandonado
-      cart_three = Cart.create!(total_price: 3, abandoned: false, last_interaction_at: 10.days.ago)
+      #cart not abandoned
+      cart_three = create(:cart, last_interaction_at: 10.days.ago)
 
       expect { described_class.perform_async }.to change(Cart, :count).by(-2)
 

@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe '/cart', type: :request do
-  let(:product_one) { Product.create(name: 'Product one', price: 1.0) }
-  let(:product_two) { Product.create(name: 'Product two', price: 2.0) }
+  let(:product_one) { create(:product) }
+  let(:product_two) { create(:product, :product_two) }
 
   describe 'POST' do
     context 'when the cart_id does not exist on the session' do

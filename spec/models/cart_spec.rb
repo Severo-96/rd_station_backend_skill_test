@@ -10,58 +10,54 @@ RSpec.describe Cart, type: :model do
   end
 
   describe 'mark_as_active' do
-    let(:cart) { described_class.create!(total_price: 1, abandoned: true) }
+    let(:shopping_cart) { create(:cart, :abandoned) }
 
     it 'marks the shopping cart as active' do
-      expect { cart.mark_as_active }.to change { cart.abandoned }.from(true).to(false)
+      expect { shopping_cart.mark_as_active }.to change { shopping_cart.abandoned }.from(true).to(false)
     end
   end
 
   describe 'mark_as_abandoned' do
-    let(:cart) { described_class.create!(total_price: 1, last_interaction_at: 3.hours.ago) }
+    let(:shopping_cart) { create(:cart) }
 
-    it 'marks the shopping cart as abandoned if inactive for at least 3 hours' do
-      expect { cart.mark_as_abandoned }.to change { cart.abandoned }.from(false).to(true)
+    it 'marks the shopping cart as abandoned if inactive for a certain time' do
+      shopping_cart.update(last_interaction_at: 3.hours.ago)
+      expect { shopping_cart.mark_as_abandoned }.to change { shopping_cart.abandoned }.from(false).to(true)
     end
 
     context 'does not mark the shopping cart as abandoned if' do
       it 'it already is' do
-        cart.update!(abandoned: true)
-        cart.mark_as_abandoned
-        expect { cart.mark_as_abandoned }.to_not change { cart.abandoned }
+        shopping_cart.update!(abandoned: true)
+        shopping_cart.mark_as_abandoned
+        expect { shopping_cart.mark_as_abandoned }.to_not change { shopping_cart.abandoned }
       end
 
       it 'it is not inactive for at least 3 hours' do
-        cart.update!(last_interaction_at: 3.hours.ago + 1.minute)
-        cart.mark_as_abandoned
-        expect { cart.mark_as_abandoned }.to_not change { cart.abandoned }
+        shopping_cart.update!(last_interaction_at: 3.hours.ago + 1.minute)
+        shopping_cart.mark_as_abandoned
+        expect { shopping_cart.mark_as_abandoned }.to_not change { shopping_cart.abandoned }
       end
     end
   end
 
   describe 'remove_if_abandoned' do
-    let(:cart) { 
-      described_class.create!(
-        total_price: 1,
-        last_interaction_at: 7.days.ago - 1.hour
-      )
-    }
+    let(:shopping_cart) { create(:cart, last_interaction_at: 7.days.ago) }
 
-    it 'removes the shopping cart if abandoned for at least 7 days' do
-      cart.mark_as_abandoned
-      expect { cart.remove_if_abandoned }.to change { Cart.count }.by(-1)
+    it 'removes the shopping cart if abandoned for a certain time' do
+      shopping_cart.mark_as_abandoned
+      expect { shopping_cart.remove_if_abandoned }.to change { Cart.count }.by(-1)
     end
 
     context 'does not remove the shopping cart if' do
       it 'it is not abandoned' do
-        cart.update!(abandoned: false)
-        expect { cart.remove_if_abandoned }.to change { Cart.count }.by(0)
+        shopping_cart.update!(abandoned: false)
+        expect { shopping_cart.remove_if_abandoned }.to change { Cart.count }.by(0)
       end
 
       it 'it is not inactive for at least 7 days' do
-        cart.mark_as_abandoned
-        cart.update!(last_interaction_at: 7.days.ago + 1.minute)
-        expect { cart.remove_if_abandoned }.to change { Cart.count }.by(0)
+        shopping_cart.mark_as_abandoned
+        shopping_cart.update!(last_interaction_at: 7.days.ago + 1.minute)
+        expect { shopping_cart.remove_if_abandoned }.to change { Cart.count }.by(0)
       end
     end
   end
