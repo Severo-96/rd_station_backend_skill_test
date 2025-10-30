@@ -44,7 +44,7 @@ services:
 
   test:
     build: .
-    command: bash -lc "bundle check || bundle install && bundle exec rails db:prepare RAILS_ENV=test && bundle exec rspec"
+    command: bash -lc "bundle check || bundle install && bundle exec rails db:prepare && bundle exec rspec"
     volumes:
       - .:/rails
       - rails_tmp:/rails/tmp

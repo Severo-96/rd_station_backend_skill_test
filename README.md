@@ -226,19 +226,24 @@ Executar projeto:
 docker compose up -d
 ```
 
-Executar os testes:
+Executar testes:
 ```bash
-docker compose exec web bash -lc "RAILS_ENV=test bundle exec rspec"
+docker compose run --rm test
+```
+```bash
+docker compose run --rm test bundle exec rspec <test-locale>
 ```
 
-Instalar as dependências do:
-```bash
-docker compose exec web bash -lc "bundle install"
-```
 
-Resetar servidor depois de alguma alteração de código:
+### Comandos dentro do container
+Resetar servidor depois de alguma alteração:
 ```bash
 docker compose restart web
+```
+
+Instalar as dependências:
+```bash
+docker compose exec web bash -lc "bundle install"
 ```
 
 Migrações do banco de dados:
@@ -246,3 +251,7 @@ Migrações do banco de dados:
 docker compose run --rm web bash -lc "bundle exec rails db:create db:migrate"
 ```
 
+Executar testes:
+```bash
+docker compose exec -e RAILS_ENV=test web bash -lc "bundle exec rails db:prepare && bundle exec rspec <test-locale>"
+```
